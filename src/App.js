@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { StarRating } from "./StarRating";
 
 const tempMovieData = [
   {
@@ -203,6 +204,8 @@ const WatchedSummary = ({ watched }) => {
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
   const avgRuntime = average(watched.map((movie) => movie.runtime));
+
+  const [movieRated, setMovieRated] = useState(0);
   return (
     <>
       <div className="summary">
@@ -225,6 +228,14 @@ const WatchedSummary = ({ watched }) => {
             <span>{avgRuntime} min</span>
           </p>
         </div>
+        <StarRating
+          maxRating={5}
+          size={32}
+          messages={["Terrible", "Bad", "Okay", "Good", "Amazing"]}
+          defaultRating={5}
+          className={"test"}
+          onSetRating={setMovieRated}
+        />
       </div>
     </>
   );
