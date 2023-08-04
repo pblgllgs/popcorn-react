@@ -48,11 +48,11 @@ export const StarRating = ({
           />
         ))}
       </div>
-      <p style={textStyle}>
+      {/* <p style={textStyle}>
         {messages.length === maxRating
           ? messages[tempRating ? tempRating - 1 : rating - 1]
           : tempRating || rating || ""}
-      </p>
+      </p> */}
     </div>
   );
 };
