@@ -8,7 +8,7 @@ const KEY = "f7c7d00a";
 
 export default function App() {
   const [movies, setMovies] = useState([]);
-  const [query, setQuery] = useState("Bourne");
+  const [query, setQuery] = useState("");
   const [watched, setWatched] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -27,25 +27,39 @@ export default function App() {
     console.log("conditionally")
   }, [query])
   */
+  useEffect(() => {
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Escape") {
+        handleCloseMovie();
+        console.log("CLOSING");
+      }
+    });
+  }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     const getMovies = async () => {
       try {
         setLoading(true);
         setError("");
         const res = await fetch(
-          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`
+          `http://www.omdbapi.com/?apikey=${KEY}&s=${query}`,
+          { signal: controller.signal }
         );
         if (!res.ok) {
           throw new Error("Something went wrong");
         }
         const data = await res.json();
         if (data.Response === "False") {
-          throw new Error("Movie not foun");
+          throw new Error("Movie not found");
         }
         setMovies(data.Search);
+        setError("");
       } catch (err) {
         console.error(err.message);
+        if (err.name !== "AbortError") {
+          setError(err.message);
+        }
         setError(err.message);
       } finally {
         setLoading(false);
@@ -56,7 +70,11 @@ export default function App() {
       setError("");
       return;
     }
+    handleCloseMovie()
     getMovies();
+    return () => {
+      controller.abort();
+    };
   }, [query]);
 
   const handleSelected = (id) => {
@@ -99,6 +117,7 @@ export default function App() {
               onHandleCloseMovie={handleCloseMovie}
               selectedId={selectedId}
               watched={watched}
+              onCloseMovie={handleCloseMovie}
             />
           ) : (
             <>
@@ -150,6 +169,7 @@ const NumResults = ({ movies }) => {
 };
 
 const Search = ({ query, setQuery }) => {
+  
   return (
     <>
       <input
@@ -222,6 +242,7 @@ const MovieDetails = ({
   onHandleWatched,
   selectedId,
   onHandleCloseMovie,
+  onCloseMovie,
 }) => {
   const [movieSelected, setMovieSelected] = useState({});
   const [isLoading, setIsLoading] = useState(false);
@@ -255,7 +276,6 @@ const MovieDetails = ({
       const data = await res.json();
       setMovieSelected(data);
       setIsLoading(false);
-      console.log(data);
     };
     getMovie();
   }, [selectedId]);
@@ -273,6 +293,29 @@ const MovieDetails = ({
     onHandleWatched(newWatchedMovie);
     onHandleCloseMovie();
   };
+
+  useEffect(() => {
+    const callback = (e) => {
+      if (e.code === "Escape") {
+        onCloseMovie();
+        console.log("CLOSING");
+      }
+    };
+
+    document.addEventListener("keydown", callback);
+    return () => {
+      document.removeEventListener("keydown", callback);
+    };
+  }, [onCloseMovie]);
+
+  useEffect(() => {
+    if (!title) return;
+    document.title = `Movie | ${title}`;
+    return () => {
+      console.log(`Clean up effect for movie ${title}`);
+      return (document.title = "UsePopcorn");
+    };
+  }, [title]);
 
   return (
     <>
